@@ -1,0 +1,78 @@
+
+= gmail-exporter
+Davide Cavestro <https://github.com/davidecavestro[@davidecavestro]>
+// Settings:
+:idprefix:
+:idseparator: -
+ifndef::env-github[:icons: font]
+ifdef::env-github,env-browser[]
+:toc: macro
+:toclevels: 1
+endif::[]
+ifdef::env-github[]
+:branch: master
+:status:
+:outfilesuffix: .adoc
+:!toc-title:
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :paperclip:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+// URIs:
+:uri-repo: https://github.com/davidecavestro/gmail-exporter
+:uri-issues: {uri-repo}/issues
+:uri-search-issues: {uri-repo}/search?type=Issues
+:uri-ci-travis: https://travis-ci.org/davidecavestro/gmail-exporter
+:uri-coverage-coveralls: https://coveralls.io/github/davidecavestro/gmail-exporter?branch=main
+ifdef::status[]
+image:https://img.shields.io/github/license/davidecavestro/gmail-exporter.svg[MIT License, link=#copyright-and-license]
+image:https://img.shields.io/github/languages/code-size/badges/shields.svg[GitHub code size in bytes]
+
+
+image:https://img.shields.io/github/release/davidecavestro/gmail-exporter.svg[GitHub release]
+image:https://img.shields.io/github/commits-since/davidecavestro/gmail-exporter/latest.svg[Github commits (since latest release)]
+
+endif::[]
+
+Export you gmail messages from command line
+
+toc::[]
+
+:imagesdir: docs/images
+:icons: font
+
+Gmail-exporter is a command line utility for exporting a local copy of email messages and related attachments from your Gmail account.
+
+
+# Features
+
+TBD
+
+For more info please see the link:docs/index.adoc[documentation].
+
+
+
+# Usage
+
+Invoke the `gmail-exporter` executable passing appropriate options...
+
+TBD
+
+# Examples
+
+## Throttling
+
+TBD
+
+
+
+# How to build
+
+TBD
+
+
+# How to release
+
+TBD
