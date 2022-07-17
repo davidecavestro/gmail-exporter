@@ -116,7 +116,8 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 		}
 		total += label.MessagesTotal
 	}
-	go func(ret chan *gmail.Message, srv *gmail.Service, user string, pageSize int64, pageLimit int64, labelIds ...string) error {
+
+	go func(ret chan *gmail.Message, srv *gmail.Service, user string, pageSize int64, pageLimit int64, labelIds ...string) {
 		var pageNum int64 = 0
 		defer close(ret)
 		caller := func() *gmail.UsersMessagesListCall {
@@ -135,12 +136,12 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 		for {
 			if err != nil {
 				log.Fatalf("Unable to retrieve '%s' messages: %v", labelIds, err)
-				return err
+				return
 			}
 			pageTotal := len(msgs.Messages)
 			if pageTotal == 0 {
 				log.Debugf("No messages found.")
-				return nil
+				return
 			}
 
 			pui.GmailNewPage(int64(pageTotal), pageNum)
@@ -154,18 +155,18 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 				msg, err := srv.Users.Messages.Get(user, m.Id).Format("full").Do()
 				if err != nil {
 					log.Fatalf("Unable to retrieve %s message: %v", m.Id, err)
-					return err
+					return
 				}
 				ret <- msg
 			}
 			if msgs.NextPageToken == "" {
-				return nil
+				return
 			}
 
 			pageNum++
 			if pageLimit > 0 && pageNum >= pageLimit {
 				log.Debugf("Limit of '%d' message pages reached", pageNum)
-				return nil
+				return
 			}
 			msgs, err = caller().PageToken(msgs.NextPageToken).Do()
 		}

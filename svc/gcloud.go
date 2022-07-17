@@ -24,7 +24,10 @@ func GetClient(config *oauth2.Config, TokenFile string, BatchMode bool, NoBrowse
 		}
 		tok = getTokenFromWeb(config, NoBrowser)
 		if !NoTokenSave {
-			saveToken(TokenFile, tok)
+			err = saveToken(TokenFile, tok)
+			if err != nil {
+				log.Errorf("Cannot save token from file: %v\n%v", TokenFile, err)
+			}
 		}
 	}
 	return config.Client(context.Background(), tok)
@@ -36,7 +39,9 @@ func getTokenFromWeb(config *oauth2.Config, NoBrowser bool) *oauth2.Token {
 	fmt.Printf("Go to the following link in your browser then type the "+
 		"authorization code: \n%v\n", authURL)
 	if !NoBrowser {
-		browser.OpenURL(authURL)
+		if err := browser.OpenURL(authURL); err != nil {
+			log.Errorf("Unable to open web browser: %v", err)
+		}
 	}
 	fmt.Printf("Authorization code:\n")
 
@@ -65,12 +70,16 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 }
 
 // Saves a token to a file path.
-func saveToken(path string, token *oauth2.Token) {
+func saveToken(path string, token *oauth2.Token) error {
 	log.Debugf("Saving credential file to: %s\n", path)
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Fatalf("Unable to cache oauth token: %v", err)
 	}
 	defer f.Close()
-	json.NewEncoder(f).Encode(token)
+	err = json.NewEncoder(f).Encode(token)
+	if err != nil {
+		return err
+	}
+	return nil
 }

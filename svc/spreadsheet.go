@@ -135,7 +135,7 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 
 		textBody, htmlBody, err := getBody(msg.Payload.Parts)
 		if err != nil {
-			log.Fatalf("Unable to get message body for msg &s: %v", msg.Id, err)
+			log.Fatalf("Unable to get message body for msg %s: %v", msg.Id, err)
 		}
 
 		row[8] = textBody
