@@ -53,13 +53,81 @@ Gmail-exporter is a command line utility for exporting a local copy of email mes
 - Filter by label exported messages
 - Command line interface with optional progress status for long tasks
 
-For more info please see the link:docs/index.adoc[documentation].
+
+= Prerequisites
+
+The user should save her own https://developers.google.com/workspace/guides/create-credentials#desktop-app[access credentials] as a local file (_credentials.json_ by default). +
+See xref:credentials-json[credentials.json] for further details.
+
+.Optional authentication persistence
+[NOTE]
+====
+*token.json* file
+
+If the token file (_token.json_ by default) exists, it should store the user's access and refresh tokens.
+
+If it doesn't exist or doesn't contain a valid token, it is created and filled automatically when the authorization flow completes for the first time, that is when the user consent access. +
+See xref:token-json[token.json] for further details.
+
+====
+
+= Usage
+
+Invoke the `gmail-exporter` executable passing appropriate options.
 
 
-# Prerequisites
+== Quickstarts
 
-The user should save her own (access credentials)[https://developers.google.com/workspace/guides/create-credentials#desktop-app] as a local file (_credentials.json_ by default) with contents similar to the following snippet:
-```
+This paragraph shows some usage examples. +
+Use `./gmail-exporter help` to get the full list of available options.
+
+=== Export sent messages from the trashcan
+
+`./gmail-exporter export SENT`
+
+=== List available labels
+
+`./gmail-exporter labels`
+
+=== Fine-tune paging
+
+Messages are downloaded in blocks (pages): set the size of each block to max 50 messages +
+`gmail-exporter --page-size 50 TRASH`
+
+Read at max 200 pages of messages +
+`gmail-exporter --pages-limit 200 TRASH`
+
+
+=== Throttling
+
+Limit the transfer of messages at 1 per second +
+`gmail-exporter --messages-per-sec 1 TRASH`
+
+Limit the download of attachments at 5 per second +
+`gmail-exporter --attachments-per-sec 5 TRASH`
+
+
+=== Batch mode
+
+Prevent both opening the browser window for auth and eventually writing the obtained token
+`gmail-exporter --batch TRASH`
+
+
+== Authentication
+
+When the application launches, it requests that the user grant access to data in the relevant Google account.
+
+If the user consents, the application requests and receives a temporary token to access Gmail
+data. All the exchanged data is just kept within the user local system.
+
+The temporary token is long-lived and saved into your local folder (by default within file _token.json_). +
+When expired, it is automatically refreshed.
+
+[[credentials-json]]The credentials file should be structured as follows 
+
+.credentials.json
+[source,json]
+----
 {
   "installed": {
     "client_id": "...",
@@ -74,65 +142,23 @@ The user should save her own (access credentials)[https://developers.google.com/
     ]
   }
 }
+----
 
-```
+[[token-json]]The auth token file should be structured as follows
 
-If the token file (_token.json_ by default) exists, it should stores the user's access and refresh tokens as follows.
-```
+.token.json
+[source,json]
+----
 {
   "access_token": "...",
   "token_type": "Bearer",
   "refresh_token": "...",
   "expiry": "2022-07-17T13:30:07.560873398+02:00"
 }
-```
-If it doesn't exist or doesn't contain a valid token, it is created and filled automatically when the authorization flow completes for the first time, that is when the user consent access. 
+----
 
 
-# Usage
+= How to build
 
-Invoke the `gmail-exporter` executable passing appropriate options.
-
-## Quickstarts
-
-Export all messages from the trashcan
-`./gmail-exporter export TRASH`
-
-
-### Fine-tune paging
-
-Messages are downloaded in blocks (pages): set the size of each block to max 50 messages
-`gmail-exporter --page-size 50 TRASH`
-
-Read at max 200 pages of messages
-`gmail-exporter --pages-limit 200 TRASH`
-
-
-### Throttling
-
-Limit the transfer of messages at 1 per second
-`gmail-exporter --messages-per-sec 1 TRASH`
-
-Limit the download of attachments at 5 per second
-`gmail-exporter --attachments-per-sec 5 TRASH`
-
-### Batch mode
-
-Prevent both opening the browser window for auth and eventually writing the obtained token
-`gmail-exporter --batch TRASH`
-
-
-## Authentication
-
-When the application launches, it requests that the user grant access to data in the relevant Google account.
-
-If the user consents, the application requests and receives a temporary token to access Gmail
-data. All the exchanged data is just kept within the user local system.
-The temporary token is long-lived and saved into your local folder (by default within file _token.json_).
-When expired, it is automatically refreshed.
-
-
-# How to build
-
-Clone the project and run
+Clone the project and run +
 `go build`
