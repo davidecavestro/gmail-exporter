@@ -5,33 +5,14 @@ import (
 
 	"github.com/davidecavestro/gmail-exporter/ui"
 	log "github.com/sirupsen/logrus"
-	"github.com/vbauerster/mpb/v7"
-	"github.com/vbauerster/mpb/v7/decor"
 	"github.com/xuri/excelize/v2"
 	"google.golang.org/api/gmail/v1"
 )
 
-type saveMsgAttachments func(*gmail.Message) ([]*LocalAttachment, error)
+type SaveMsgAttachments func(*gmail.Message) ([]*LocalAttachment, error)
 
-func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, saveMsgAttachments saveMsgAttachments) *excelize.File {
-	taskName := "Filling output file"
-	var progressBar *mpb.Bar
-	if pui != nil {
-		progressBar = pui.BarContainer.New(total,
-			// BarFillerBuilder with custom style
-			mpb.BarStyle(),
-			mpb.PrependDecorators(
-				decor.Name(taskName, decor.WC{W: len(taskName) + 2, C: decor.DidentRight}),
-				decor.OnComplete(
-					decor.AverageETA(decor.ET_STYLE_GO, decor.WC{W: 6}), "  done",
-				),
-			),
-			mpb.AppendDecorators(
-				// decor.Percentage(decor.WC{W: 5})
-				decor.CountersNoUnit("%d / %d", decor.WCSyncWidth),
-			),
-		)
-	}
+func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, saveMsgAttachments SaveMsgAttachments) *excelize.File {
+	pui.SpreadsheetTotal(total)
 
 	file := excelize.NewFile()
 	streamWriter, err := file.NewStreamWriter("Sheet1")
@@ -93,7 +74,11 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 
 	rowID := 2
 	for msg := range msgs {
-		attachments, err := saveMsgAttachments(msg)
+		var attachments []*LocalAttachment = nil
+		var err error = nil
+		if saveMsgAttachments != nil {
+			attachments, err = saveMsgAttachments(msg)
+		}
 		if err != nil {
 			log.Fatalf("Cannot save attachments: %v", err)
 		}
@@ -170,9 +155,7 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 		if err := streamWriter.SetRow(cell, row); err != nil {
 			log.Fatalf("Unable to set xls row: %v", err)
 		}
-		if pui != nil {
-			progressBar.Increment()
-		}
+		pui.SpreadsheetIncrement()
 	}
 
 	if err := streamWriter.Flush(); err != nil {
