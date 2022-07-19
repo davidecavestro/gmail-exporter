@@ -56,7 +56,7 @@ Gmail-exporter is a command line utility for exporting a local copy of email mes
 
 = Prerequisites
 
-The user should save her own https://developers.google.com/workspace/guides/create-credentials#desktop-app[access credentials] as a local file (_credentials.json_ by default). +
+The user should generate and save the https://developers.google.com/workspace/guides/create-credentials#desktop-app[access credentials] as a local file (i.e. _credentials.json_). +
 See xref:credentials-json[credentials.json] for further details.
 
 .Optional authentication persistence
