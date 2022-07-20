@@ -162,3 +162,11 @@ When expired, it is automatically refreshed.
 
 Clone the project and run +
 `go build`
+
+= How to release
+
+Add a tag with proper message and push it
+```
+git tag v0.0.1 -m "First public release for wider testing."
+git push origin v0.0.1 
+```
