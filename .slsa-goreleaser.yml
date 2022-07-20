@@ -26,7 +26,7 @@ goarch: amd64
 # Binary output name.
 # {{ .Os }} will be replaced by goos field in the config file.
 # {{ .Arch }} will be replaced by goarch field in the config file.
-binary: gmail-exporter-{{ .Os }}-{{ .Arch }}
+binary: gmail-exporter-{{ .Tag }}-{{ .Os }}-{{ .Arch }}
 
 # (Optional) ldflags generated dynamically in the workflow, and set as the `evaluated-envs` input variables in the workflow.
 ldflags:
