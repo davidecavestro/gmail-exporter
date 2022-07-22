@@ -10,7 +10,7 @@ ifdef::env-github,env-browser[]
 :toclevels: 1
 endif::[]
 ifdef::env-github[]
-:branch: master
+:branch: main
 :status:
 :outfilesuffix: .adoc
 :!toc-title:
@@ -24,17 +24,15 @@ endif::[]
 :uri-repo: https://github.com/davidecavestro/gmail-exporter
 :uri-issues: {uri-repo}/issues
 :uri-search-issues: {uri-repo}/search?type=Issues
-:uri-ci-travis: https://travis-ci.org/davidecavestro/gmail-exporter
-:uri-coverage-coveralls: https://coveralls.io/github/davidecavestro/gmail-exporter?branch=main
-ifdef::status[]
-image:https://img.shields.io/github/license/davidecavestro/gmail-exporter.svg[MIT License, link=#copyright-and-license]
+// :url-rel-file-base: {url-repo}/blob/HEAD/
+:url-rel-file-base: link:
+:url-license: {url-rel-file-base}LICENSE
+// images:
+image:https://img.shields.io/github/license/badges/shields.svg[MIT License, link=#copyright-and-license]
 image:https://img.shields.io/github/languages/code-size/badges/shields.svg[GitHub code size in bytes]
-
-
 image:https://img.shields.io/github/release/davidecavestro/gmail-exporter.svg[GitHub release]
 image:https://img.shields.io/github/commits-since/davidecavestro/gmail-exporter/latest.svg[Github commits (since latest release)]
 
-endif::[]
 
 Export you gmail messages from command line
 
@@ -43,10 +41,10 @@ toc::[]
 :imagesdir: docs/images
 :icons: font
 
-Gmail-exporter is a command line utility for exporting a local copy of email messages and related attachments from your Gmail account.
+{uri-repo}[Gmail-exporter] is a command line utility for exporting a local copy of email messages and related attachments from your Gmail account.
 
 
-# Features
+== Features
 
 - Export email messages to a spreadsheet
 - Optionally export related attachments and put refs into the spreadsheet
@@ -54,7 +52,11 @@ Gmail-exporter is a command line utility for exporting a local copy of email mes
 - Command line interface with optional progress status for long tasks
 
 
-= Prerequisites
+== Privacy policy
+
+_Gmail-exporter_'s use of information received from Google APIs will adhere to https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes[Google API Services User Data Policy], including the Limited Use requirements.
+
+== Prerequisites
 
 The user should generate and save the https://developers.google.com/workspace/guides/create-credentials#desktop-app[access credentials] as a local file (i.e. _credentials.json_). +
 See xref:credentials-json[credentials.json] for further details.
@@ -71,25 +73,25 @@ See xref:token-json[token.json] for further details.
 
 ====
 
-= Usage
+== Usage
 
 Invoke the `gmail-exporter` executable passing appropriate options.
 
 
-== Quickstarts
+=== Quickstarts
 
 This paragraph shows some usage examples. +
 Use `./gmail-exporter help` to get the full list of available options.
 
-=== Export sent messages from the trashcan
+==== Export sent messages from the trashcan
 
 `./gmail-exporter export SENT`
 
-=== List available labels
+==== List available labels
 
 `./gmail-exporter labels`
 
-=== Fine-tune paging
+==== Fine-tune paging
 
 Messages are downloaded in blocks (pages): set the size of each block to max 50 messages +
 `gmail-exporter --page-size 50 TRASH`
@@ -98,7 +100,7 @@ Read at max 200 pages of messages +
 `gmail-exporter --pages-limit 200 TRASH`
 
 
-=== Throttling
+==== Throttling
 
 Limit the transfer of messages at 1 per second +
 `gmail-exporter --messages-per-sec 1 TRASH`
@@ -107,13 +109,13 @@ Limit the download of attachments at 5 per second +
 `gmail-exporter --attachments-per-sec 5 TRASH`
 
 
-=== Batch mode
+==== Batch mode
 
 Prevent both opening the browser window for auth and eventually writing the obtained token
 `gmail-exporter --batch TRASH`
 
 
-== Authentication
+=== Authentication
 
 When the application launches, it requests that the user grant access to data in the relevant Google account.
 
@@ -158,15 +160,22 @@ When expired, it is automatically refreshed.
 ----
 
 
-= How to build
+== How to build
 
 Clone the project and run +
 `go build`
 
-= How to release
+== How to release
 
 Add a tag with proper message and push it
 ```
 git tag v0.0.1 -m "First public release for wider testing."
 git push origin v0.0.1 
 ```
+
+== Copyright and License
+
+Copyright (C) 2022-present Davide Cavestro.
+Use of this software is granted under the terms of the MIT License.
+
+See the {url-license}[LICENSE] for the full license text.
