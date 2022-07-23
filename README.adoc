@@ -55,22 +55,6 @@ toc::[]
 
 _Gmail-exporter_'s use of information received from Google APIs will adhere to https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes[Google API Services User Data Policy], including the Limited Use requirements.
 
-== Prerequisites
-
-The user should generate and save the https://developers.google.com/workspace/guides/create-credentials#desktop-app[access credentials] as a local file (i.e. _credentials.json_). +
-See xref:credentials-json[credentials.json] for further details.
-
-.Optional authentication persistence
-[NOTE]
-====
-*token.json* file
-
-If the token file (_token.json_ by default) exists, it should store the user's access and refresh tokens.
-
-If it doesn't exist or doesn't contain a valid token, it is created and filled automatically when the authorization flow completes for the first time, that is when the user consent access. +
-See xref:token-json[token.json] for further details.
-
-====
 
 == Usage
 
@@ -123,27 +107,6 @@ data. All the exchanged data is just kept within the user local system.
 
 The temporary token is long-lived and saved into your local folder (by default within file _token.json_). +
 When expired, it is automatically refreshed.
-
-[[credentials-json]]The credentials file should be structured as follows 
-
-.credentials.json
-[source,json]
-----
-{
-  "installed": {
-    "client_id": "...",
-    "project_id": "gmail-exporter-343907",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_secret": "...",
-    "redirect_uris": [
-      "urn:ietf:wg:oauth:2.0:oob",
-      "http://localhost"
-    ]
-  }
-}
-----
 
 [[token-json]]The auth token file should be structured as follows
 

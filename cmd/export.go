@@ -50,9 +50,10 @@ var exportCmd = &cobra.Command{
 	Short:            "Export mail messages",
 	Long:             `Export mail messages, optionally filtered by specified labels.`,
 	TraverseChildren: true,
+	Args:             cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		srv, err := svc.GetGmailSrv(CredsFile, TokenFile, BatchMode, NoBrowser, NoTokenSave)
+		srv, err := svc.GetGmailSrv(TokenFile, BatchMode, NoBrowser, NoTokenSave)
 		if err != nil {
 			logger.Fatalf("Unable to retrieve Gmail client: %v", err)
 		}

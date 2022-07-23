@@ -2,6 +2,7 @@ package svc
 
 import (
 	"context"
+	_ "embed"
 	"encoding/base64"
 	"io/ioutil"
 	"os"
@@ -22,14 +23,13 @@ type LocalAttachment struct {
 	Filename string
 }
 
-func GetGmailSrv(CredsFile string, TokenFile string, BatchMode bool, NoBrowser bool, NoTokenSave bool) (*gmail.Service, error) {
-	ctx := context.Background()
-	b, err := ioutil.ReadFile(CredsFile)
-	if err != nil {
-		logger.Fatal("Unable to read client secret file: ", zap.Error(err))
-	}
+//go:embed credentials.json
+var Creds []byte
 
-	config, err := google.ConfigFromJSON(b, gmail.GmailReadonlyScope)
+func GetGmailSrv(TokenFile string, BatchMode bool, NoBrowser bool, NoTokenSave bool) (*gmail.Service, error) {
+	ctx := context.Background()
+
+	config, err := google.ConfigFromJSON(Creds, gmail.GmailReadonlyScope)
 	if err != nil {
 		logger.Fatalf("Unable to parse client secret file to config: %v", err)
 	}

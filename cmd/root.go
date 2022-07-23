@@ -27,12 +27,10 @@ var User string
 var BatchMode bool
 var NoBrowser bool
 var NoTokenSave bool
-var CredsFile string
 var TokenFile string
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&User, "user", "u", "me", "User - 'me' is a shortcut to credentials account")
-	rootCmd.PersistentFlags().StringVarP(&CredsFile, "credentials-file", "c", "credentials.json", "File containing the auth token")
 	rootCmd.PersistentFlags().StringVarP(&TokenFile, "token-file", "t", "token.json", "File containing the auth token")
 	rootCmd.PersistentFlags().BoolVarP(&BatchMode, "batch", "b", false, "Batch mode - not acquiring new auth tokens nor showing progress bars")
 	rootCmd.PersistentFlags().BoolVarP(&NoBrowser, "no-browser", "w", false, "Don't open the web browser if authentication needed")

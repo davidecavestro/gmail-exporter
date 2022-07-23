@@ -19,7 +19,7 @@ var labelsCmd = &cobra.Command{
 	Short: "List available labels",
 	Long:  `List all available labels - optionally matching a filter - so that you can use them to filter exported messages.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		srv, err := svc.GetGmailSrv(CredsFile, TokenFile, BatchMode, NoBrowser, NoTokenSave)
+		srv, err := svc.GetGmailSrv(TokenFile, BatchMode, NoBrowser, NoTokenSave)
 		if err != nil {
 			logger.Fatalf("Unable to retrieve Gmail client: %v", err)
 		}
