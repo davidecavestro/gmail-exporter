@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/davidecavestro/gmail-exporter/logger"
 	"github.com/davidecavestro/gmail-exporter/ui"
-	log "github.com/sirupsen/logrus"
 	"go.uber.org/ratelimit"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
@@ -25,12 +26,12 @@ func GetGmailSrv(CredsFile string, TokenFile string, BatchMode bool, NoBrowser b
 	ctx := context.Background()
 	b, err := ioutil.ReadFile(CredsFile)
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		logger.Fatal("Unable to read client secret file: ", zap.Error(err))
 	}
 
 	config, err := google.ConfigFromJSON(b, gmail.GmailReadonlyScope)
 	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
+		logger.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
 	client := GetClient(config, TokenFile, BatchMode, NoBrowser, NoTokenSave)
 
@@ -59,7 +60,7 @@ func SaveAttachments(srv *gmail.Service, rateLimiter ratelimit.Limiter, Attachme
 				}
 				attach, err := srv.Users.Messages.Attachments.Get(user, message.Id, attachmentId).Do()
 				if err != nil {
-					log.Fatalf("Unable to retrieve attachment: %v", err)
+					logger.Fatalf("Unable to retrieve attachment: %v", err)
 				}
 				attachmentId = attach.AttachmentId
 				if attachmentId != "" {
@@ -76,15 +77,14 @@ func SaveAttachments(srv *gmail.Service, rateLimiter ratelimit.Limiter, Attachme
 						if ph.Name == "Content-Disposition" {
 							if !strings.HasPrefix(ph.Value, "inline;") {
 								dirPath := filepath.Join(paths...)
-								log.Debugf("File to write: %s - Type: %s - %#v\n", p.Filename, p.MimeType, p.Headers)
 								err := os.MkdirAll(dirPath, os.ModePerm)
 								if err != nil {
-									log.Fatalf("Unable to prepare attachments dir: %v", err)
+									logger.Fatal("Unable to prepare attachments dir: ", zap.Error(err))
 								}
 								filename := filepath.Join(dirPath, p.Filename)
 								err = ioutil.WriteFile(filename, decoded, 0644)
 								if err != nil {
-									log.Fatalf("Unable to save attachment: %v", err)
+									logger.Fatal("Unable to save attachment: ", zap.Error(err))
 								}
 								ret = append(ret, &LocalAttachment{Filename: filename})
 							}
@@ -105,23 +105,42 @@ func ListLabels(srv *gmail.Service, user string) ([]*gmail.Label, error) {
 	}
 }
 
-func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user string, pageSize int64, pageLimit int64, labelIds ...string) (chan *gmail.Message, int64) {
+func GetLabelsByIdOrName(srv *gmail.Service, user string, refs ...string) ([]*gmail.Label, error) {
+	if labels, err := srv.Users.Labels.List(user).Do(); err != nil {
+		return nil, err
+	} else {
+		ret := make([]*gmail.Label, len(refs))
+		for idx, ref := range refs {
+			for _, label := range labels.Labels {
+				if label.Id == ref || label.Name == ref {
+					ret[idx] = label
+					break
+				}
+			}
+		}
+		return ret, err
+	}
+}
+
+func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user string, pageSize int64, pageLimit int64, labelRefs ...string) (chan *gmail.Message, int64) {
 	ret := make(chan *gmail.Message, pageSize)
 
 	var total int64 = 0
-	for _, labelId := range labelIds {
-		label, err := srv.Users.Labels.Get(user, labelId).Do()
-		if err != nil {
-			log.Fatalf("Unable to retrieve label '%s': %v", labelId, err)
-		}
+	labels, err := GetLabelsByIdOrName(srv, user, labelRefs...)
+	if err != nil {
+		logger.Fatalf("Unable to retrieve labels '%s': %v", labelRefs, err)
+	}
+	labelIds := make([]string, len(labels))
+	for idx, label := range labels {
 		total += label.MessagesTotal
+		labelIds[idx] = label.Id
 	}
 
 	go func(ret chan *gmail.Message, srv *gmail.Service, user string, pageSize int64, pageLimit int64, labelIds ...string) {
 		var pageNum int64 = 0
 		defer close(ret)
 		caller := func() *gmail.UsersMessagesListCall {
-			log.Debugf("Getting messages for page %d", pageNum)
+			logger.Debugf("Getting messages for page %d", pageNum)
 			return srv.Users.Messages.List(user).MaxResults(pageSize).LabelIds(labelIds...)
 		}
 
@@ -135,12 +154,12 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 
 		for {
 			if err != nil {
-				log.Fatalf("Unable to retrieve '%s' messages: %v", labelIds, err)
+				logger.Fatalf("Unable to retrieve '%s' messages: %v", labelIds, err)
 				return
 			}
 			pageTotal := len(msgs.Messages)
 			if pageTotal == 0 {
-				log.Debugf("No messages found.")
+				logger.Debugf("No messages found.")
 				return
 			}
 
@@ -154,7 +173,7 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 
 				msg, err := srv.Users.Messages.Get(user, m.Id).Format("full").Do()
 				if err != nil {
-					log.Fatalf("Unable to retrieve %s message: %v", m.Id, err)
+					logger.Fatalf("Unable to retrieve %s message: %v", m.Id, err)
 					return
 				}
 				ret <- msg
@@ -165,7 +184,7 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 
 			pageNum++
 			if pageLimit > 0 && pageNum >= pageLimit {
-				log.Debugf("Limit of '%d' message pages reached", pageNum)
+				logger.Debugf("Limit of '%d' message pages reached", pageNum)
 				return
 			}
 			msgs, err = caller().PageToken(msgs.NextPageToken).Do()

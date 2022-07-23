@@ -4,9 +4,10 @@ import (
 	"math"
 	"time"
 
+	"github.com/davidecavestro/gmail-exporter/logger"
 	"github.com/davidecavestro/gmail-exporter/svc"
 	"github.com/davidecavestro/gmail-exporter/ui"
-	log "github.com/sirupsen/logrus"
+
 	"github.com/spf13/cobra"
 	"github.com/vbauerster/mpb/v7"
 	"go.uber.org/ratelimit"
@@ -50,11 +51,10 @@ var exportCmd = &cobra.Command{
 	Long:             `Export mail messages, optionally filtered by specified labels.`,
 	TraverseChildren: true,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.SetFormatter(&log.JSONFormatter{})
 
 		srv, err := svc.GetGmailSrv(CredsFile, TokenFile, BatchMode, NoBrowser, NoTokenSave)
 		if err != nil {
-			log.Fatalf("Unable to retrieve Gmail client: %v", err)
+			logger.Fatalf("Unable to retrieve Gmail client: %v", err)
 		}
 
 		user := User
@@ -95,7 +95,7 @@ var exportCmd = &cobra.Command{
 		file := svc.ExportMessages(msgs, messageCount, &pui, saveMsgFiles)
 
 		if err := file.SaveAs(outputFile); err != nil {
-			log.Fatalf("Unable to save xls file: %v", err)
+			logger.Fatalf("Unable to save xls file: %v", err)
 		}
 	},
 }

@@ -3,8 +3,8 @@ package svc
 import (
 	"encoding/base64"
 
+	"github.com/davidecavestro/gmail-exporter/logger"
 	"github.com/davidecavestro/gmail-exporter/ui"
-	log "github.com/sirupsen/logrus"
 	"github.com/xuri/excelize/v2"
 	"google.golang.org/api/gmail/v1"
 )
@@ -17,11 +17,11 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 	file := excelize.NewFile()
 	streamWriter, err := file.NewStreamWriter("Sheet1")
 	if err != nil {
-		log.Fatalf("Unable to prepare stream writer: %v", err)
+		logger.Fatalf("Unable to prepare stream writer: %v", err)
 	}
 	styleID, err := file.NewStyle(&excelize.Style{Font: &excelize.Font{Color: "#777777"}})
 	if err != nil {
-		log.Fatalf("Unable to prepare header style: %v", err)
+		logger.Fatalf("Unable to prepare header style: %v", err)
 	}
 	if err := streamWriter.SetRow("A1", []interface{}{
 		excelize.Cell{StyleID: styleID, Value: "FROM"},
@@ -40,7 +40,7 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT4"},
 		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT5"}},
 		excelize.RowOpts{Height: 25, Hidden: false}); err != nil {
-		log.Fatalf("Cannot write headers to prepare stream, writer: %v", err)
+		logger.Fatalf("Cannot write headers to prepare stream, writer: %v", err)
 	}
 	err = file.AddTable("Sheet1", "A1", "O1", `{
 		"table_name": "table",
@@ -51,7 +51,7 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 		"show_column_stripes": true
 	}`)
 	if err != nil {
-		log.Fatalf("Unable to decorate xls table: %v", err)
+		logger.Fatalf("Unable to decorate xls table: %v", err)
 	}
 	// err = file.AutoFilter("Sheet1", "A1", "H1", "")
 	err = file.SetPanes("Sheet1", `{
@@ -69,7 +69,7 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 		}]
 	}`)
 	if err != nil {
-		log.Fatalf("Unable to decorate xls table: %v", err)
+		logger.Fatalf("Unable to decorate xls table: %v", err)
 	}
 
 	rowID := 2
@@ -80,7 +80,7 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 			attachments, err = saveMsgAttachments(msg)
 		}
 		if err != nil {
-			log.Fatalf("Cannot save attachments: %v", err)
+			logger.Fatalf("Cannot save attachments: %v", err)
 		}
 
 		// wg.Done()
@@ -120,7 +120,7 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 				} else if part.Parts != nil {
 					innerText, innerHtml, err := getBody(part.Parts)
 					if err != nil {
-						log.Fatalf("Unable to process inner part: %v", err)
+						logger.Fatalf("Unable to process inner part: %v", err)
 					}
 					if innerText != "" {
 						text = concat("\n", text, innerText)
@@ -135,7 +135,7 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 
 		textBody, htmlBody, err := getBody(msg.Payload.Parts)
 		if err != nil {
-			log.Fatalf("Unable to get message body for msg %s: %v", msg.Id, err)
+			logger.Fatalf("Unable to get message body for msg %s: %v", msg.Id, err)
 		}
 
 		row[8] = textBody
@@ -153,13 +153,13 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 		cell, _ := excelize.CoordinatesToCellName(1, rowID)
 		rowID++
 		if err := streamWriter.SetRow(cell, row); err != nil {
-			log.Fatalf("Unable to set xls row: %v", err)
+			logger.Fatalf("Unable to set xls row: %v", err)
 		}
 		pui.SpreadsheetIncrement()
 	}
 
 	if err := streamWriter.Flush(); err != nil {
-		log.Fatalf("Unable to save xls file: %v", err)
+		logger.Fatalf("Unable to save xls file: %v", err)
 	}
 
 	return file

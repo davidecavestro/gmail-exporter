@@ -3,9 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"regexp"
 
+	"github.com/davidecavestro/gmail-exporter/logger"
 	"github.com/davidecavestro/gmail-exporter/svc"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -14,13 +15,13 @@ func init() {
 }
 
 var labelsCmd = &cobra.Command{
-	Use:   "labels",
+	Use:   "labels [filter regex]",
 	Short: "List available labels",
-	Long:  `List all available labels, so that you can use them to filter exported messages.`,
+	Long:  `List all available labels - optionally matching a filter - so that you can use them to filter exported messages.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv, err := svc.GetGmailSrv(CredsFile, TokenFile, BatchMode, NoBrowser, NoTokenSave)
 		if err != nil {
-			log.Fatalf("Unable to retrieve Gmail client: %v", err)
+			logger.Fatalf("Unable to retrieve Gmail client: %v", err)
 		}
 
 		user := User
@@ -29,8 +30,26 @@ var labelsCmd = &cobra.Command{
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		} else {
+			patterns := []string{`.*`}
+
+			if len(args) > 0 {
+				patterns = args
+			}
+			filters := make([]*regexp.Regexp, len(patterns))
+
+			for idx, pattern := range patterns {
+				filters[idx] = regexp.MustCompile(pattern)
+			}
+			filters = svc.RemoveNils(filters)
+
 			for _, label := range labels {
-				fmt.Fprintln(os.Stdout, label.Name)
+				for _, filter := range filters {
+					match := filter.Match([]byte(label.Name))
+					if match {
+						fmt.Printf("%s\n", label.Name)
+						break
+					}
+				}
 			}
 			os.Exit(0)
 		}
