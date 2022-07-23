@@ -34,15 +34,14 @@ image:https://img.shields.io/github/release/davidecavestro/gmail-exporter.svg[Gi
 image:https://img.shields.io/github/commits-since/davidecavestro/gmail-exporter/latest.svg[Github commits (since latest release)]
 
 
-Export you gmail messages from command line
-
-toc::[]
-
 :imagesdir: docs/images
 :icons: font
 
 {uri-repo}[Gmail-exporter] is a command line utility for exporting a local copy of email messages and related attachments from your Gmail account.
 
+image::export_session.svg[Example for exporting messages tagged as FOOBAR, then checking exported contents]
+
+toc::[]
 
 == Features
 
