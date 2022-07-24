@@ -12,6 +12,8 @@ func init() {
 	config.Encoding = "console"
 	// prodConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	config.EncoderConfig.EncodeDuration = zapcore.StringDurationEncoder
+	config.EncoderConfig.TimeKey = ""
+	config.EncoderConfig.NameKey = ""
 	// config.EncoderConfig.StacktraceKey = "" // to hide stacktrace info
 	logger, err := config.Build()
 
