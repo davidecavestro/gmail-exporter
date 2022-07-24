@@ -135,6 +135,10 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 	if err != nil {
 		logger.Fatalf("Unable to retrieve labels '%s': %v", labelRefs, err)
 	}
+	if len(labels) == 0 {
+		logger.Info("No labels found matching", labelRefs)
+		os.Exit(10)
+	}
 	labelIds := make([]string, 0)
 	for _, label := range labels {
 		if label != nil {
