@@ -8,7 +8,7 @@ func concat(sep string, elems ...string) string {
 	return strings.Join(elems, sep)
 }
 
-func RemoveNils[C any](s []*C) []*C {
+func RemoveNils[C any | string](s []*C) []*C {
 	i := 0 // output index
 	for _, x := range s {
 		if x != nil {

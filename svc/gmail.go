@@ -109,12 +109,17 @@ func GetLabelsByIdOrName(srv *gmail.Service, user string, refs ...string) ([]*gm
 	if labels, err := srv.Users.Labels.List(user).Do(); err != nil {
 		return nil, err
 	} else {
-		ret := make([]*gmail.Label, len(refs))
-		for idx, ref := range refs {
+		ret := make([]*gmail.Label, 0)
+		for _, ref := range refs {
 			for _, label := range labels.Labels {
 				if label.Id == ref || label.Name == ref {
-					ret[idx] = label
-					break
+					// get label details
+					if label, err := srv.Users.Labels.Get(user, label.Id).Do(); err != nil {
+						return nil, err
+					} else {
+						ret = append(ret, label)
+						break
+					}
 				}
 			}
 		}
@@ -130,10 +135,12 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 	if err != nil {
 		logger.Fatalf("Unable to retrieve labels '%s': %v", labelRefs, err)
 	}
-	labelIds := make([]string, len(labels))
-	for idx, label := range labels {
-		total += label.MessagesTotal
-		labelIds[idx] = label.Id
+	labelIds := make([]string, 0)
+	for _, label := range labels {
+		if label != nil {
+			total += label.MessagesTotal
+			labelIds = append(labelIds, label.Id)
+		}
 	}
 
 	go func(ret chan *gmail.Message, srv *gmail.Service, user string, pageSize int64, pageLimit int64, labelIds ...string) {

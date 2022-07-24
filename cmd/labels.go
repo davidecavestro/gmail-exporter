@@ -35,12 +35,11 @@ var labelsCmd = &cobra.Command{
 			if len(args) > 0 {
 				patterns = args
 			}
-			filters := make([]*regexp.Regexp, len(patterns))
+			filters := make([]*regexp.Regexp, 0)
 
-			for idx, pattern := range patterns {
-				filters[idx] = regexp.MustCompile(pattern)
+			for _, pattern := range patterns {
+				filters = append(filters, regexp.MustCompile(pattern))
 			}
-			filters = svc.RemoveNils(filters)
 
 			for _, label := range labels {
 				for _, filter := range filters {
