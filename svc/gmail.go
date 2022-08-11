@@ -38,6 +38,42 @@ func GetGmailSrv(TokenFile string, BatchMode bool, NoBrowser bool, NoTokenSave b
 	return gmail.NewService(ctx, option.WithHTTPClient(client))
 }
 
+func SaveMessageFile(srv *gmail.Service, MessagesDir string, MessagesSeed *[]int32, user string, msgId string) (string, error) {
+	message, err := srv.Users.Messages.Get(user, msgId).Format("RAW").Do()
+	if err != nil {
+		return "", err
+	}
+
+	decodedData, err := base64.URLEncoding.DecodeString(message.Raw)
+
+	if err != nil {
+		return "", err
+	}
+	// base64.URLEncoding(decodedData, decodedData)
+
+	paths := []string{MessagesDir}
+	var last int32
+	last = 0
+	for _, p := range *MessagesSeed {
+		paths = append(paths, message.Id[last:last+p])
+		last = p
+	}
+
+	dirPath := filepath.Join(paths...)
+	err = os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		logger.Fatal("Unable to prepare messages dir: ", zap.Error(err))
+	}
+	filename := filepath.Join(dirPath, message.Id+".eml")
+
+	if err = ioutil.WriteFile(filename, decodedData, 0644); err != nil {
+		return "", err
+	} else {
+		return filename, err
+	}
+
+}
+
 func SaveAttachments(srv *gmail.Service, rateLimiter ratelimit.Limiter, AttachmentsDir string, AttachmentsSeed *[]int32, user string, message *gmail.Message) ([]*LocalAttachment, error) {
 
 	var ret []*LocalAttachment
@@ -168,13 +204,13 @@ func GetMessages(srv *gmail.Service, messagesLimit int, pui *ui.ProgressUI, user
 				logger.Fatalf("Unable to retrieve '%s' messages: %v", labelIds, err)
 				return
 			}
-			pageTotal := len(msgs.Messages)
-			if pageTotal == 0 {
+			msgTotal := len(msgs.Messages)
+			if msgTotal == 0 {
 				logger.Debugf("No messages found.")
 				return
 			}
 
-			pui.GmailNewPage(int64(pageTotal), pageNum)
+			pui.GmailNewPage(int64(msgTotal), pageNum)
 			// pui.GmailPageTotal(int64(pageTotal))
 			for _, m := range msgs.Messages {
 				if rateLimiter != nil {

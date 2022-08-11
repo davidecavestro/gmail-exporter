@@ -2,6 +2,7 @@ package svc
 
 import (
 	"encoding/base64"
+	"strings"
 
 	"github.com/davidecavestro/gmail-exporter/logger"
 	"github.com/davidecavestro/gmail-exporter/ui"
@@ -10,8 +11,13 @@ import (
 )
 
 type SaveMsgAttachments func(*gmail.Message) ([]*LocalAttachment, error)
+type SaveEml func(*gmail.Message) (string, error)
 
-func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, saveMsgAttachments SaveMsgAttachments) *excelize.File {
+func ExportMessages(
+	msgs chan *gmail.Message, total int64, pui *ui.ProgressUI,
+	saveMsgAttachments SaveMsgAttachments,
+	saveEml SaveEml, NoHtmlBody bool, NoTextBody bool) *excelize.File {
+
 	pui.SpreadsheetTotal(total)
 
 	file := excelize.NewFile()
@@ -34,11 +40,12 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 		excelize.Cell{StyleID: styleID, Value: "SNIPPET"},
 		excelize.Cell{StyleID: styleID, Value: "TEXT BODY"},
 		excelize.Cell{StyleID: styleID, Value: "HTML BODY"},
+		excelize.Cell{StyleID: styleID, Value: "EML"},
+		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT LIST"},
 		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT1"},
 		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT2"},
 		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT3"},
-		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT4"},
-		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT5"}},
+		excelize.Cell{StyleID: styleID, Value: "ATTACHMENT4"}},
 		excelize.RowOpts{Height: 25, Hidden: false}); err != nil {
 		logger.Fatalf("Cannot write headers to prepare stream, writer: %v", err)
 	}
@@ -83,6 +90,13 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 			logger.Fatalf("Cannot save attachments: %v", err)
 		}
 
+		var emlFile string = ""
+		if saveEml != nil {
+			emlFile, err = saveEml(msg)
+			if err != nil {
+				logger.Fatalf("Cannot save message: %v", err)
+			}
+		}
 		// wg.Done()
 		row := make([]interface{}, 50)
 		// go func(msg gmail.Message) {
@@ -138,16 +152,27 @@ func ExportMessages(msgs chan *gmail.Message, total int64, pui *ui.ProgressUI, s
 			logger.Fatalf("Unable to get message body for msg %s: %v", msg.Id, err)
 		}
 
-		row[8] = textBody
-		row[9] = htmlBody
+		if !NoTextBody {
+			row[8] = textBody
+		}
+		if !NoHtmlBody {
+			row[9] = htmlBody
+		}
+		row[10] = emlFile
 
-		col := 10
-		for _, attachment := range attachments {
+		attachmentCsv := []string{}
+		col := 12
+		for attPos, attachment := range attachments {
 			if attachment != nil {
-				row[col] = attachment.Filename
-				col++
+				attachmentCsv = append(attachmentCsv, attachment.Filename)
+
+				if attPos < 4 {
+					row[col] = attachment.Filename
+					col++
+				}
 			}
 		}
+		row[11] = strings.Join(attachmentCsv, ",")
 		// }(*msg)
 
 		cell, _ := excelize.CoordinatesToCellName(1, rowID)

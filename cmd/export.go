@@ -24,6 +24,11 @@ var NoProgressBar bool
 var NoAttachments bool
 var AttachmentsDir string
 var AttachmentsSeed *[]int32
+var SaveEml bool
+var EmlDir string
+var EmlSeed *[]int32
+var NoHtmlBody bool
+var NoTextBody bool
 
 func init() {
 	exportCmd.Flags().Int64VarP(&PageLimit, "pages-limit", "l", 0, "Max message pages fetched (default 0, so unlimited)")
@@ -31,7 +36,7 @@ func init() {
 	exportCmd.Flags().StringVarP(&OutputFile, "out-file", "f", "messages.xlsx", "Output file")
 
 	exportCmd.Flags().IntVarP(&MessagesPerSec, "messages-per-sec", "m", 0, "Limit download of messages per second (default 0, so unlimited)")
-	exportCmd.Flags().IntVarP(&AttachmentsPerSec, "attachments-per-sec", "e", 0, "Limit download of attachments per second (default 0, so unlimited)")
+	exportCmd.Flags().IntVarP(&AttachmentsPerSec, "attachments-per-sec", "c", 0, "Limit download of attachments per second (default 0, so unlimited)")
 
 	exportCmd.Flags().BoolVarP(&NoProgressBar, "no-progressbar", "n", false, "Hide progress bars")
 	exportCmd.Flags().IntVarP(&ProgressBarWidth, "progressbar-width", "i", 64, "Progressbar width")
@@ -41,6 +46,15 @@ func init() {
 	exportCmd.Flags().StringVarP(&AttachmentsDir, "attachments-dir", "d", "attachments", "Attachments output directory")
 	AttachmentsSeed = &[]int32{}
 	exportCmd.Flags().Int32SliceVarP(AttachmentsSeed, "attachments-seed", "x", defaultAttachmentsSeed, "Attachments subfolder naming strategy")
+
+	exportCmd.Flags().BoolVarP(&SaveEml, "save-eml", "e", false, "Export every message on a separated EML file")
+	defaultEmlSeed := []int32{2, 2}
+	exportCmd.Flags().StringVarP(&EmlDir, "eml-dir", "r", "messages", "EML output directory")
+	EmlSeed = &[]int32{}
+	exportCmd.Flags().Int32SliceVarP(EmlSeed, "eml-seed", "z", defaultEmlSeed, "EML subfolder naming strategy")
+
+	exportCmd.Flags().BoolVarP(&NoHtmlBody, "no-html-body", "j", false, "Omit html body on the spreadsheet")
+	exportCmd.Flags().BoolVarP(&NoTextBody, "no-text-body", "k", false, "Omit text body on the spreadsheet")
 
 	rootCmd.AddCommand(exportCmd)
 }
@@ -80,10 +94,16 @@ var exportCmd = &cobra.Command{
 		if attachmentsLimit != 0 {
 			attachmentLimiter = ratelimit.New(attachmentsLimit, limitWindow)
 		}
-		var saveMsgFiles svc.SaveMsgAttachments = nil
+		var saveMsgAttachments svc.SaveMsgAttachments = nil
 		if !NoAttachments {
-			saveMsgFiles = func(msg *gmail.Message) ([]*svc.LocalAttachment, error) {
+			saveMsgAttachments = func(msg *gmail.Message) ([]*svc.LocalAttachment, error) {
 				return svc.SaveAttachments(srv, attachmentLimiter, AttachmentsDir, AttachmentsSeed, user, msg)
+			}
+		}
+		var saveEml svc.SaveEml = nil
+		if SaveEml {
+			saveEml = func(msg *gmail.Message) (string, error) {
+				return svc.SaveMessageFile(srv, EmlDir, EmlSeed, user, msg.Id)
 			}
 		}
 
@@ -93,7 +113,7 @@ var exportCmd = &cobra.Command{
 		} else {
 			messageCount = totalMessages
 		}
-		file := svc.ExportMessages(msgs, messageCount, &pui, saveMsgFiles)
+		file := svc.ExportMessages(msgs, messageCount, &pui, saveMsgAttachments, saveEml, NoHtmlBody, NoTextBody)
 
 		if err := file.SaveAs(outputFile); err != nil {
 			logger.Fatalf("Unable to save xls file: %v", err)
