@@ -47,8 +47,9 @@ toc::[]
 
 - Export email messages to a spreadsheet
 - Optionally export related attachments and put refs into the spreadsheet
-- Filter by label exported messages
-- Command line interface with optional progress status for long tasks
+- Optionally export messages as EML and put refs into the spreadsheet
+- Exported messages filtered by label
+- Optional progress status for long tasks
 
 
 == Privacy policy
@@ -66,9 +67,13 @@ Invoke the `gmail-exporter` executable passing appropriate options.
 This paragraph shows some usage examples. +
 Use `./gmail-exporter help` to get the full list of available options.
 
-==== Export sent messages from the trashcan
+==== Export sent messages
 
 `./gmail-exporter export SENT`
+
+==== Export messages from trashcan as EML 
+
+`./gmail-exporter export --save-eml TRASH`
 
 ==== List available labels
 
@@ -105,10 +110,9 @@ When the application launches, it requests that the user grant access to data in
 If the user consents, the application requests and receives a temporary token to access Gmail
 data. All the exchanged data is just kept within the user local system.
 
-The temporary token is long-lived and saved into your local folder (by default within file _token.json_). +
-When expired, it is automatically refreshed.
+The temporary token is long-lived and saved into your local folder (by default within file _token.json_).
 
-[[token-json]]The auth token file should be structured as follows
+[[token-json]]The auth token file is structured as follows
 
 .token.json
 [source,json]
