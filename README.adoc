@@ -43,6 +43,10 @@ image::export_session.svg[Example for exporting messages tagged as FOOBAR, then 
 
 toc::[]
 
+== Project status
+
+This project is in beta test, going to apply for google oauth approval. 
+
 == Features
 
 - Export email messages to a spreadsheet
