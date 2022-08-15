@@ -129,6 +129,14 @@ The temporary token is long-lived and saved into your local folder (by default w
 }
 ----
 
+== Other tools
+
+Here are a few alternatives that are worthy of consideration:
+
+* https://github.com/gaubert/gmvault[gmvault]
+* https://github.com/GAM-team/got-your-back[got-your-back]
+* https://github.com/joeyates/imap-backup[imap-backup]
+
 
 == How to build
 
