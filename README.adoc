@@ -129,15 +129,6 @@ The temporary token is long-lived and saved into your local folder (by default w
 }
 ----
 
-== Other tools
-
-Here are a few alternatives that are worthy of consideration:
-
-* https://github.com/gaubert/gmvault[gmvault]
-* https://github.com/GAM-team/got-your-back[got-your-back]
-* https://github.com/joeyates/imap-backup[imap-backup]
-
-
 == How to build
 
 Clone the project and run +
@@ -150,6 +141,16 @@ Add a tag with proper message and push it
 git tag v0.0.1 -m "First public release for wider testing."
 git push origin v0.0.1 
 ```
+
+== Other tools
+
+Looking for other tools to backup your email messages? (and more) +
+Here are a few alternatives that are worthy of consideration:
+
+* https://github.com/gaubert/gmvault[gmvault]
+* https://github.com/GAM-team/got-your-back[got-your-back]
+* https://github.com/joeyates/imap-backup[imap-backup]
+
 
 == Copyright and License
 
